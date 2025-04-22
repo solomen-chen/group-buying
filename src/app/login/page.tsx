@@ -12,9 +12,9 @@ export default function LoginPage() {
   const [message, setMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
+  // const togglePasswordVisibility = () => {
+  //   setShowPassword(!showPassword);
+  // };
 
   const handleLogin = async () => {
     setLoading(true);
@@ -44,6 +44,7 @@ export default function LoginPage() {
         // router.push('/dashboard');
       }
     } catch (err) {
+      console.error(err);
       setMessage('登入時發生錯誤');
     } finally {
       setLoading(false);
