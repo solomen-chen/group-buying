@@ -5,7 +5,7 @@ import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret';
 
-export async function GET(_req: NextRequest) {
+export async function GET() {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get('token')?.value;
@@ -20,7 +20,8 @@ export async function GET(_req: NextRequest) {
       userId: decoded.userId,
       name: decoded.name,
     });
-  } catch (_err) {
+  } catch (err) {
+    console.error('Token verification failed:', err);
     return NextResponse.json({ message: '無效的 token' }, { status: 401 });
   }
 }
