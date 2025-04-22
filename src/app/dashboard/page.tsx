@@ -4,6 +4,11 @@ import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret'; // 記得這跟登入那邊一致
 
+interface JwtPayload {
+  userId: string;
+  name: string;
+}
+
 export default async function DashboardPage() {
   const cookieStore = await cookies();
   const token = cookieStore.get('token')?.value;
@@ -12,7 +17,7 @@ export default async function DashboardPage() {
 
   if (token) {
     try {
-      const decoded: any = jwt.verify(token, JWT_SECRET);
+      const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
       userName = decoded.name;
     } catch (err) {
       console.error('JWT 驗證失敗:', err);
