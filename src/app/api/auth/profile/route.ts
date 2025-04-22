@@ -5,7 +5,7 @@ import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret';
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get('token')?.value;
@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
       userId: decoded.userId,
       name: decoded.name,
     });
-  } catch (err) {
+  } catch (_err) {
     return NextResponse.json({ message: '無效的 token' }, { status: 401 });
   }
 }
