@@ -2,9 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import jwt from 'jsonwebtoken';
-
-const JWT_SECRET = process.env.NEXT_PUBLIC_JWT_SECRET || 'your-secret';
 
 export default function DashboardPage() {
   const [userName, setUserName] = useState('');
