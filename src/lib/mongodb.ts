@@ -7,7 +7,22 @@ if (!MONGODB_URI) {
   throw new Error('請設定 MONGODB_URI 環境變數');
 }
 
-let cached = (global as any).mongoose || { conn: null, promise: null };
+// 定義類型
+interface MongooseGlobal {
+  mongoose: {
+    conn: typeof mongoose | null;
+    promise: Promise<typeof mongoose> | null;
+  };
+}
+
+// global 宣告
+const globalWithMongoose = globalThis as unknown as MongooseGlobal;
+
+// 初始化 cache
+const cached = globalWithMongoose.mongoose || {
+  conn: null,
+  promise: null,
+};
 
 export async function connectToDatabase() {
   if (cached.conn) return cached.conn;
@@ -21,6 +36,6 @@ export async function connectToDatabase() {
   }
 
   cached.conn = await cached.promise;
-  (global as any).mongoose = cached;
+  globalWithMongoose.mongoose = cached;
   return cached.conn;
 }
