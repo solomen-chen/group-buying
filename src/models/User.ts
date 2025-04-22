@@ -1,5 +1,5 @@
 // src/models/User.ts
-import mongoose, { Schema, model, models } from 'mongoose';
+import { Schema, model, models } from 'mongoose';
 
 const userSchema = new Schema({
   name: { type: String, required: true },               // 團主名稱
