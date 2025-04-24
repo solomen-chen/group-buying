@@ -40,6 +40,7 @@ export default function LoginPage() {
       } else {
         setMessage(`✅ ${data.message}`);
         router.push("/dashboard");
+        // router.push("/dashboard");
         // 可以導向後台或首頁，如：
         // router.push('/dashboard');
       }

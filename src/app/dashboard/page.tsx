@@ -1,46 +1,24 @@
-'use client';
+// src/app/dashboard/page.tsx
+import { redirect } from 'next/navigation';
+import { getServerUser } from '@/lib/auth';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+export default async function DashboardPage() {
+  const user = await getServerUser();
 
-export default function DashboardPage() {
-  const [userName, setUserName] = useState('');
-  const router = useRouter();
-
-  useEffect(() => {
-    const fetchTokenAndDecode = async () => {
-      try {
-        const res = await fetch('/api/auth/profile');
-        const data = await res.json();
-
-        if (res.ok && data.name) {
-          setUserName(data.name);
-        } else {
-          router.push('/login');
-        }
-      } catch (error) {
-        console.error('取得使用者資料失敗', error);
-        router.push('/login');
-      }
-    };
-
-    fetchTokenAndDecode();
-  }, [router]);
-
-  const handleLogout = async () => {
-    await fetch('/api/auth/logout', { method: 'POST' });
-    router.push('/login');
-  };
+  if (!user) {
+    redirect('/login'); // 未登入跳轉
+    return null; // Prevent further rendering
+  }
 
   return (
-    <div className="max-w-xl mx-auto mt-10 p-6 border rounded shadow bg-white text-gray-700">
-      <h1 className="text-2xl font-bold mb-4">歡迎回來，{userName || '使用者'}！</h1>
-      <button
-        onClick={handleLogout}
-        className="mt-4 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
-      >
-        登出
-      </button>
+    <div>
+      <h1 className="text-2xl font-bold mb-4">歡迎 {user.name}！</h1>
+      <p>您的 user ID 是：{user.userId}</p>
+      <Link href="./group/create">
+        <Button className="mt-6 ml-6">建立新團單</Button>
+      </Link>
     </div>
   );
 }
