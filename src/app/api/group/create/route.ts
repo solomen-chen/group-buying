@@ -14,15 +14,14 @@ export async function POST(req: NextRequest) {
 
     await connectToDatabase();
 
-    // 建立團單（不包含 products）
     const group = await GroupOrder.create({
       name: groupName,
       deadline,
-      pickupOptions,
+      pickupOptions, // structured: [{ time, location }]
+      status: 'open',
       ownerId,
     });
 
-    // 儲存每個商品並關聯 group ID
     for (const p of products) {
       await Product.create({
         group: group._id,

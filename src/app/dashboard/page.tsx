@@ -16,7 +16,7 @@ export default async function DashboardPage() {
     <div>
       <h1 className="text-2xl font-bold mb-4">歡迎 {user.name}！</h1>
       <p>您的 user ID 是：{user.userId}</p>
-      <Link href="./clientTest">
+      <Link href="./group/create">
         <Button className="mt-6 ml-6">建立新團單</Button>
       </Link>
     </div>

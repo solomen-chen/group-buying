@@ -1,160 +1,158 @@
-// src/app/group/create/GroupCreateForm.tsx
 'use client';
 
-import { useState } from 'react';
+import { useEffect,useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
+import { getCurrentUser } from '@/lib/auth/client';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
-interface ProductInput {
-  name: string;
-  image: string;
-  spec: string;
-  price: string;
-  supply: string;
-}
-
-interface Props {
-  ownerId: string;
-}
-
-export default function GroupCreateForm({ ownerId }: Props) {
+export default function GroupCreateForm() {
   const router = useRouter();
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const currentUser = await getCurrentUser();
+      setUser(currentUser);
+    };
+    fetchUser();
+  }, []);
+
   const [groupName, setGroupName] = useState('');
   const [deadline, setDeadline] = useState('');
-  const [pickupOptions, setPickupOptions] = useState<string[]>(['']);
-  const [products, setProducts] = useState<ProductInput[]>([
+  const [pickupOptions, setPickupOptions] = useState([{ time: '', location: '' }]);
+  const [products, setProducts] = useState([
     { name: '', image: '', spec: '', price: '', supply: '' },
   ]);
 
-  const handlePickupChange = (index: number, value: string) => {
-    const updated = [...pickupOptions];
-    updated[index] = value;
-    setPickupOptions(updated);
-  };
-
-  const addPickupOption = () => setPickupOptions([...pickupOptions, '']);
-
-  const handleProductChange = (index: number, field: keyof ProductInput, value: string) => {
-    const updated = [...products];
-    updated[index][field] = value;
-    setProducts(updated);
-  };
-
-  const addProduct = () => {
-    setProducts([...products, { name: '', image: '', spec: '', price: '', supply: '' }]);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) {
+      alert('請先登入');
+      return;
+    }
 
-    try {
-      const res = await fetch('/api/group/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          groupName,
-          deadline,
-          pickupOptions: pickupOptions.filter(p => p.trim() !== ''),
-          ownerId,
-          products,
-        }),
-      });
+    const res = await fetch('/api/group/create', {
+      method: 'POST',
+      body: JSON.stringify({
+        name,
+        deadline,
+        pickupOptions,
+        ownerId: user.userId,
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
 
-      const data = await res.json();
-
-      if (!res.ok) throw new Error(data.message || '建立失敗');
-
-      toast.success('團單建立成功');
-      router.push('/dashboard');
-    } catch (err: any) {
-      toast.error(err.message || '錯誤發生');
+    if (res.ok) {
+      alert('開團成功');
+    } else {
+      alert('開團失敗');
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div>
-        <label className="block font-semibold">團購名稱</label>
-        <input
-          className="w-full border p-2 rounded"
-          value={groupName}
-          onChange={(e) => setGroupName(e.target.value)}
-          required
-        />
-      </div>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <Input
+        placeholder="團名"
+        value={groupName}
+        onChange={(e) => setGroupName(e.target.value)}
+      />
+      <Input
+        type="datetime-local"
+        value={deadline}
+        onChange={(e) => setDeadline(e.target.value)}
+      />
 
       <div>
-        <label className="block font-semibold">截止日期</label>
-        <input
-          type="date"
-          className="w-full border p-2 rounded"
-          value={deadline}
-          onChange={(e) => setDeadline(e.target.value)}
-          required
-        />
-      </div>
-
-      <div>
-        <label className="block font-semibold">自取時間/地點</label>
+        <p className="font-bold">取貨時段與地點</p>
         {pickupOptions.map((opt, idx) => (
-          <input
-            key={idx}
-            className="w-full border p-2 rounded mb-2"
-            value={opt}
-            onChange={(e) => handlePickupChange(idx, e.target.value)}
-          />
-        ))}
-        <button type="button" className="text-blue-500" onClick={addPickupOption}>
-          + 新增自取選項
-        </button>
-      </div>
-
-      <div>
-        <label className="block font-semibold">商品項目</label>
-        {products.map((p, idx) => (
-          <div key={idx} className="border p-4 mb-4 rounded space-y-2">
-            <input
-              className="w-full border p-2 rounded"
-              placeholder="商品名稱"
-              value={p.name}
-              onChange={(e) => handleProductChange(idx, 'name', e.target.value)}
+          <div key={idx} className="flex gap-2 my-1">
+            <Input
+              placeholder="時間"
+              value={opt.time}
+              onChange={(e) => {
+                const next = [...pickupOptions];
+                next[idx].time = e.target.value;
+                setPickupOptions(next);
+              }}
             />
-            <input
-              className="w-full border p-2 rounded"
-              placeholder="圖片 URL"
-              value={p.image}
-              onChange={(e) => handleProductChange(idx, 'image', e.target.value)}
-            />
-            <input
-              className="w-full border p-2 rounded"
-              placeholder="說明"
-              value={p.spec}
-              onChange={(e) => handleProductChange(idx, 'spec', e.target.value)}
-            />
-            <input
-              className="w-full border p-2 rounded"
-              placeholder="價格"
-              type="number"
-              value={p.price}
-              onChange={(e) => handleProductChange(idx, 'price', e.target.value)}
-            />
-            <input
-              className="w-full border p-2 rounded"
-              placeholder="供應數量 (0 表示無限)"
-              type="number"
-              value={p.supply}
-              onChange={(e) => handleProductChange(idx, 'supply', e.target.value)}
+            <Input
+              placeholder="地點"
+              value={opt.location}
+              onChange={(e) => {
+                const next = [...pickupOptions];
+                next[idx].location = e.target.value;
+                setPickupOptions(next);
+              }}
             />
           </div>
         ))}
-        <button type="button" className="text-blue-500" onClick={addProduct}>
-          + 新增商品
-        </button>
+        <Button type="button" onClick={() => setPickupOptions([...pickupOptions, { time: '', location: '' }])}>
+          + 新增取貨選項
+        </Button>
       </div>
 
-      <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">
-        建立團單
-      </button>
+      <div>
+        <p className="font-bold">商品</p>
+        {products.map((p, idx) => (
+          <div key={idx} className="grid grid-cols-2 gap-2 my-1">
+            <Input
+              placeholder="名稱"
+              value={p.name}
+              onChange={(e) => {
+                const next = [...products];
+                next[idx].name = e.target.value;
+                setProducts(next);
+              }}
+            />
+            <Input
+              placeholder="圖片 URL"
+              value={p.image}
+              onChange={(e) => {
+                const next = [...products];
+                next[idx].image = e.target.value;
+                setProducts(next);
+              }}
+            />
+            <Input
+              placeholder="規格"
+              value={p.spec}
+              onChange={(e) => {
+                const next = [...products];
+                next[idx].spec = e.target.value;
+                setProducts(next);
+              }}
+            />
+            <Input
+              placeholder="價格"
+              type="number"
+              value={p.price}
+              onChange={(e) => {
+                const next = [...products];
+                next[idx].price = e.target.value;
+                setProducts(next);
+              }}
+            />
+            <Input
+              placeholder="數量限制（0 表示不限）"
+              type="number"
+              value={p.supply}
+              onChange={(e) => {
+                const next = [...products];
+                next[idx].supply = e.target.value;
+                setProducts(next);
+              }}
+            />
+          </div>
+        ))}
+        <Button type="button" onClick={() => setProducts([...products, { name: '', image: '', spec: '', price: '', supply: '' }])}>
+          + 新增商品
+        </Button>
+      </div>
+
+      <Button type="submit">建立團單</Button>
     </form>
   );
 }

@@ -11,7 +11,8 @@ export default async function GroupCreatePage() {
 
   return (
     <main className="max-w-3xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6">開團作業</h1>
+      <h1 className="text-2xl font-bold mb-6">開團作業   ( {user.name} )</h1>
+      
       <GroupCreateForm ownerId={user.userId} />
     </main>
   );

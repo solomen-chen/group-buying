@@ -1,22 +1,23 @@
-// src/lib/models/Product.ts
+// models/Product.ts
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IProduct extends Document {
-  group: mongoose.Types.ObjectId;
+  groupOrderId: mongoose.Types.ObjectId;
   name: string;
   imageUrl: string;
-  spec: string;
+  description: string;
   price: number;
-  supply: number; // 0 = 不限量
+  supply: number; // 0 表示無上限
   createdAt: Date;
+  updatedAt: Date;
 }
 
 const ProductSchema: Schema = new Schema<IProduct>(
   {
-    group: { type: Schema.Types.ObjectId, ref: 'Group', required: true },
+    groupOrderId: { type: Schema.Types.ObjectId, ref: 'GroupOrder', required: true },
     name: { type: String, required: true },
     imageUrl: { type: String, required: true },
-    spec: { type: String, required: true },
+    description: { type: String, required: true },
     price: { type: Number, required: true },
     supply: { type: Number, default: 0 },
   },
