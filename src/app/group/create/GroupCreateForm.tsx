@@ -1,263 +1,166 @@
 // src/app/group/create/GroupCreateForm.tsx
 // This file is part of the project "Group Order System".
 
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { getCurrentUser } from '@/lib/auth/client';
-import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Loader2 } from "lucide-react";
 
-interface PickupOption {
-  time: string;
-  location: string;
-}
+import { v4 as uuidv4 } from "uuid";
 
-interface Product {
+import Image from "next/image";
+
+type Product = {
   name: string;
   spec: string;
+  price: string;
+  supply: string;
   imageUrl: string;
-  price: number;
-  supply: number;
-}
+};
 
 export default function GroupCreateForm() {
-  const router = useRouter();
-  const [groupname, setgroupname] = useState('');
-  const [deadline, setDeadline] = useState('');
-  const [pickupOptions, setPickupOptions] = useState<PickupOption[]>([{ time: '', location: '' }]);
-  const [products, setProducts] = useState<Product[]>([{
-    name: '',
-    spec: '',
-    imageUrl: '',
-    price: 0,
-    supply: 0
-  }]);
-  const [supplyInputTouched, setSupplyInputTouched] = useState<boolean[]>([false]);
-  const [submitting, setSubmitting] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
 
-  const addPickupOption = () => {
-    setPickupOptions([...pickupOptions, { time: '', location: '' }]);
-  };
-
-  const removePickupOption = (index: number) => {
-    const updated = [...pickupOptions];
-    updated.splice(index, 1);
-    setPickupOptions(updated);
-  };
-
-  const updatePickupOption = <K extends keyof PickupOption>(index: number, field: K, value: PickupOption[K]) => {
-    const updated = [...pickupOptions];
+  const updateProduct = (
+    index: number,
+    field: keyof Product,
+    value: string
+  ) => {
+    const updated = [...products];
     updated[index][field] = value;
-    setPickupOptions(updated);
+    setProducts(updated);
+  };
+
+  const handleImageChange = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    index: number
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", "solomen");
+
+    setUploadingIndex(index);
+
+    try {
+      const res = await fetch(
+        "https://api.cloudinary.com/v1_1/dasjcpmcg/image/upload",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const data = await res.json();
+      if (data.secure_url) {
+        updateProduct(index, "imageUrl", data.secure_url);
+      }
+    } catch (err) {
+      console.error("Upload failed", err);
+    } finally {
+      setUploadingIndex(null);
+    }
   };
 
   const addProduct = () => {
-    setProducts([...products, { name: '', spec: '', imageUrl: '', price: 0, supply: 0 }]);
-    setSupplyInputTouched([...supplyInputTouched, false]);
-  };
-
-  const removeProduct = (index: number) => {
-    const updated = [...products];
-    updated.splice(index, 1);
-    setProducts(updated);
-    const supplyUpdated = [...supplyInputTouched];
-    supplyUpdated.splice(index, 1);
-    setSupplyInputTouched(supplyUpdated);
-  };
-
-  const markSupplyTouched = (index: number) => {
-    setSupplyInputTouched((prev) => {
-      const copy = [...prev];
-      copy[index] = true;
-      return copy;
-    });
-  };
-
-  const updateProduct = <K extends keyof Product>(index: number, field: K, value: Product[K]) => {
-    const updated = [...products];
-    updated[index][field] = value;
-    setProducts(updated);
-  };
-
-  const handleSubmit = async () => {
-    if (!groupname || !deadline || products.length === 0 || pickupOptions.length === 0) {
-      toast.error('請完整填寫所有欄位');
-      return;
-    }
-    setSubmitting(true);
-    try {
-      const user = await getCurrentUser();
-      if (!user) throw new Error('尚未登入');
-
-      console.log('送出的資料:', {
-        groupname,
-        deadline,
-        pickupOptions,
-        ownerId: user.userId,
-        products,
-      });
-      
-
-      const res = await fetch('/api/group/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          groupname,
-          deadline,
-          pickupOptions,
-          products,
-          ownerId: user.userId
-        })
-      });
-
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.message || '建立失敗');
-
-      toast.success('開團成功');
-      router.push(`/group/${result.groupId}`);
-    } catch (err: any) {
-      toast.error(err.message || '開團失敗');
-    } finally {
-      setSubmitting(false);
-    }
+    setProducts([
+      ...products,
+      {
+        name: "",
+        spec: "",
+        price: "",
+        supply: "",
+        imageUrl: "",
+      },
+    ]);
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">建立團單</h1>
+    <div className="space-y-8">
+      {products.map((product, index) => (
+        <div
+          key={index}
+          className="border rounded-xl p-4 shadow-md space-y-4"
+        >
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>商品名稱</Label>
+              <Input
+                value={product.name}
+                onChange={(e) =>
+                  updateProduct(index, "name", e.target.value)
+                }
+              />
+            </div>
+            <div>
+              <Label>規格 / 說明</Label>
+              <Input
+                value={product.spec}
+                onChange={(e) =>
+                  updateProduct(index, "spec", e.target.value)
+                }
+              />
+            </div>
+            <div>
+              <Label>價格</Label>
+              <Input
+                type="number"
+                value={product.price}
+                onChange={(e) =>
+                  updateProduct(index, "price", e.target.value)
+                }
+              />
+            </div>
+            <div>
+              <Label>供應數量 (0 表示無限)</Label>
+              <Input
+                type="number"
+                value={product.supply}
+                onChange={(e) =>
+                  updateProduct(index, "supply", e.target.value)
+                }
+              />
+            </div>
+          </div>
 
-      <input
-        type="text"
-        placeholder="團單名稱"
-        value={groupname}
-        onChange={(e) => setgroupname(e.target.value)}
-        required
-        className="border p-2 w-full mb-4"
-      />
-
-      <input
-        type="datetime-local"
-        value={deadline}
-        onChange={(e) => setDeadline(e.target.value)}
-        required
-        className="border p-2 w-full mb-4"
-      />
-
-      <div className="mb-4">
-        <label className="block font-semibold mb-2">取貨時段與地點</label>
-        {pickupOptions.map((option, idx) => (
-          <div key={idx} className="flex gap-2 mb-2">
-            <input
-              type="text"
-              placeholder="時間"
-              value={option.time}
-              onChange={(e) => updatePickupOption(idx, 'time', e.target.value)}
-              required
-              className="border p-2 w-full"
+          <div>
+            <Label>商品圖片</Label>
+            <Input
+              type="file"
+              accept="image/*"
+              onChange={(e) => handleImageChange(e, index)}
             />
-            <input
-              type="text"
-              placeholder="地點"
-              value={option.location}
-              onChange={(e) => updatePickupOption(idx, 'location', e.target.value)}
-              required
-              className="border p-2 w-full"
-            />
-            {pickupOptions.length > 1 && (
-              <button
-                type="button"
-                onClick={() => removePickupOption(idx)}
-                className="text-red-600"
-              >
-                刪除
-              </button>
+
+            {uploadingIndex === index && (
+              <div className="flex items-center space-x-2 text-sm text-blue-600 mt-2">
+                <Loader2 className="animate-spin w-4 h-4" />
+                <span>上傳中...</span>
+              </div>
+            )}
+
+            {product.imageUrl && (
+              <Image
+                src={product.imageUrl}
+                alt="上傳圖片"
+                width={200}
+                height={200}
+                className="rounded-xl mt-2"
+              />
             )}
           </div>
-        ))}
-        <button
-          type="button"
-          onClick={addPickupOption}
-          className="mt-2 px-4 py-1 rounded bg-blue-600 text-white hover:bg-blue-700"
-        >
-          新增取貨時段與地點
-        </button>
-      </div>
+        </div>
+      ))}
 
-      <div className="mb-4">
-        <label className="block font-semibold mb-2">商品</label>
-        {products.map((product, idx) => (
-          <div key={idx} className="border rounded-xl p-4 mb-4 bg-gray-50">
-            <input
-              type="text"
-              placeholder="名稱"
-              value={product.name}
-              onChange={(e) => updateProduct(idx, 'name', e.target.value)}
-              required
-              className="border p-2 w-full mb-2"
-            />
-            <input
-              type="text"
-              placeholder="規格"
-              value={product.spec}
-              onChange={(e) => updateProduct(idx, 'spec', e.target.value)}
-              className="border p-2 w-full mb-2"
-            />
-            <input
-              type="text"
-              placeholder="圖片網址"
-              value={product.imageUrl}
-              onChange={(e) => updateProduct(idx, 'imageUrl', e.target.value)}
-              className="border p-2 w-full mb-2"
-            />
-            <input
-              type="number"
-              placeholder="價格"
-              value={product.price === 0 ? '' : product.price}
-              onChange={(e) => updateProduct(idx, 'price', e.target.value === '' ? 0 : Number(e.target.value))}
-              required
-              className="border p-2 w-full mb-2"
-            />
-            <input
-              type="number"
-              placeholder="供應量 (0 表示無限）"
-              value={product.supply === 0 && supplyInputTouched[idx] === false ? '' : product.supply}
-              onChange={(e) => {
-                const value = e.target.value;
-                updateProduct(idx, 'supply', value === '' ? 0 : Number(value));
-                markSupplyTouched(idx);
-              }}
-              required
-              className="border p-2 w-full mb-2"
-            />
-            {products.length > 1 && (
-              <button
-                type="button"
-                onClick={() => removeProduct(idx)}
-                className="text-red-600 text-sm"
-              >
-                刪除商品
-              </button>
-            )}
-          </div>
-        ))}
-        <button
-          type="button"
-          onClick={addProduct}
-          className="mt-2 px-4 py-1 rounded bg-blue-600 text-white hover:bg-blue-700"
-        >
-          新增商品
-        </button>
-      </div>
-
-      <button
-        type="button"
-        onClick={handleSubmit}
-        disabled={submitting}
-        className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
-      >
-        {submitting ? '建立中...' : '建立團單'}
-      </button>
+      <Button type="button" onClick={addProduct}>
+        新增商品
+      </Button>
     </div>
   );
 }
