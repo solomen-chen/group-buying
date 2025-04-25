@@ -6,16 +6,20 @@ import Product from '@/models/Product';
 
 export async function POST(req: NextRequest) {
   try {
-    const { groupName, deadline, pickupOptions, ownerId, products } = await req.json();
+    const { groupname, deadline, pickupOptions, ownerId, products } = await req.json();
 
-    if (!groupName || !deadline || !pickupOptions?.length || !ownerId || !products?.length) {
+    if (!groupname || !deadline || !pickupOptions?.length || !ownerId || !products?.length) {
       return NextResponse.json({ message: '欄位不可為空' }, { status: 400 });
+    }
+
+    if (!products || !Array.isArray(products)) {
+      return NextResponse.json({ message: '商品資訊錯誤' }, { status: 400 });
     }
 
     await connectToDatabase();
 
     const group = await GroupOrder.create({
-      name: groupName,
+      groupname,
       deadline,
       pickupOptions, // structured: [{ time, location }]
       status: 'open',
@@ -24,9 +28,9 @@ export async function POST(req: NextRequest) {
 
     for (const p of products) {
       await Product.create({
-        group: group._id,
+        groupOrderId: group._id,
         name: p.name,
-        imageUrl: p.image,
+        imageUrl: p.imageUrl,
         spec: p.spec,
         price: Number(p.price),
         supply: Number(p.supply),
