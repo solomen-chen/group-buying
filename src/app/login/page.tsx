@@ -91,6 +91,10 @@ export default function LoginPage() {
       </button>
 
       {message && <p className="mt-4 text-center text-sm text-red-600">{message}</p>}
+
+      <p className="mt-4 text-center text-sm text-gray-500">
+        還沒有帳號？ <a href="/register" className="text-blue-600 hover:underline">註冊</a>
+      </p>
     </div>
   );
 }

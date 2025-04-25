@@ -58,6 +58,7 @@ export default function RegisterPage() {
       <div className="max-w-md mx-auto mt-10 p-6 border rounded-lg shadow bg-white">
         <h2 className="text-2xl font-bold mb-4 text-gray-700">註冊新帳號</h2>
 
+        <label className="block mb-1 text-blue-600 font-bold ">姓名</label>
         <input
           type="text"
           placeholder="姓名"
@@ -65,7 +66,7 @@ export default function RegisterPage() {
           onChange={(e) => setName(e.target.value)}
           className="w-full mb-3 p-2 border rounded text-gray-500 placeholder-gray-400"
         />
-
+        <label className="block mb-1 text-blue-600 font-bold">Email</label>
         <input
           type="email"
           placeholder="Email"
@@ -74,13 +75,15 @@ export default function RegisterPage() {
           className="w-full mb-3 p-2 border rounded text-gray-500 placeholder-gray-400"
         />
 
+        <label className="block mb-1 text-blue-600 font-bold">密碼</label>
+
         <div className="relative mb-3">
           <input
             type={showPassword ? 'text' : 'password'}
             placeholder="密碼"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-2 pr-10 border rounded text-gray-500 placeholder-gray-400"
+            className="w-full p-2 pr-10 border rounded text-gray-500 placeholder-gray-400  "
           />
           <button
             type="button"
