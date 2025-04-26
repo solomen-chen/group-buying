@@ -76,7 +76,24 @@ export default function GroupCreateForm() {
     ]);
   };
 
-    
+  // const removeProduct = (index: number) => {
+  //   const updated = [...products];
+  //   updated.splice(index, 1);
+  //   setProducts(updated);
+  //   const supplyUpdated = [...supplyInputTouched];
+  //   supplyUpdated.splice(index, 1);
+  //   setSupplyInputTouched(supplyUpdated);
+  // };
+
+  // const markSupplyTouched = (index: number) => {
+  //   setSupplyInputTouched((prev) => {
+  //     const copy = [...prev];
+  //     copy[index] = true;
+  //     return copy;
+  //   });
+  // };
+
+  
   const updateProduct = (
     index: number,
     field: keyof Product,
