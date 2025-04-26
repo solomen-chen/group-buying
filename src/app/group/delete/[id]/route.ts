@@ -1,0 +1,16 @@
+// src/app/api/group/delete/[id]/route.ts
+import { NextResponse } from "next/server";
+import GroupOrder from "@/models/GroupOrder";
+import "@/lib/mongodb"; // 確保 mongoose 初始化
+
+export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+  const { id } = params;
+
+  try {
+    await GroupOrder.deleteOne({ _id: id });
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("刪除失敗:", error);
+    return NextResponse.json({ success: false, error: "刪除失敗" }, { status: 500 });
+  }
+}

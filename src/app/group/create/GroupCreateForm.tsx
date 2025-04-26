@@ -18,13 +18,6 @@ interface PickupOption {
   location: string;
 }
 
-// interface Product {
-//   name: string;
-//   spec: string;
-//   imageUrl: string;
-//   price: number;
-//   supply: number;
-// }
 
 type Product = {
   name: string;
@@ -39,14 +32,15 @@ export default function GroupCreateForm() {
   const [groupname, setgroupname] = useState('');
   const [deadline, setDeadline] = useState('');
   const [pickupOptions, setPickupOptions] = useState<PickupOption[]>([{ time: '', location: '' }]);
-  const [products, setProducts] = useState<Product[]>([]);
-  // const [products, setProducts] = useState<Product[]>([{
-  //   name: '',
-  //   spec: '',
-  //   imageUrl: '',
-  //   price: 0,
-  //   supply: 0
-  // }]);
+  // const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<Product[]>([{
+    name: "",
+    spec: "",
+    price: "",
+    supply: "",
+    imageUrl: "",
+}]);
+  
   const [supplyInputTouched, setSupplyInputTouched] = useState<boolean[]>([false]);
   const [submitting, setSubmitting] = useState(false);
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
@@ -60,6 +54,7 @@ export default function GroupCreateForm() {
     updated.splice(index, 1);
     setPickupOptions(updated);
   };
+  
 
   const updatePickupOption = <K extends keyof PickupOption>(index: number, field: K, value: PickupOption[K]) => {
     const updated = [...pickupOptions];
@@ -67,10 +62,7 @@ export default function GroupCreateForm() {
     setPickupOptions(updated);
   };
 
-  // const addProduct = () => {
-  //   setProducts([...products, { name: '', spec: '', imageUrl: '', price: 0, supply: 0 }]);
-  //   setSupplyInputTouched([...supplyInputTouched, false]);
-  // };
+  
   const addProduct = () => {
     setProducts([
       ...products,
@@ -84,28 +76,24 @@ export default function GroupCreateForm() {
     ]);
   };
 
-  const removeProduct = (index: number) => {
-    const updated = [...products];
-    updated.splice(index, 1);
-    setProducts(updated);
-    const supplyUpdated = [...supplyInputTouched];
-    supplyUpdated.splice(index, 1);
-    setSupplyInputTouched(supplyUpdated);
-  };
-
-  const markSupplyTouched = (index: number) => {
-    setSupplyInputTouched((prev) => {
-      const copy = [...prev];
-      copy[index] = true;
-      return copy;
-    });
-  };
-
-  // const updateProduct = <K extends keyof Product>(index: number, field: K, value: Product[K]) => {
+  // const removeProduct = (index: number) => {
   //   const updated = [...products];
-  //   updated[index][field] = value;
+  //   updated.splice(index, 1);
   //   setProducts(updated);
+  //   const supplyUpdated = [...supplyInputTouched];
+  //   supplyUpdated.splice(index, 1);
+  //   setSupplyInputTouched(supplyUpdated);
   // };
+
+  // const markSupplyTouched = (index: number) => {
+  //   setSupplyInputTouched((prev) => {
+  //     const copy = [...prev];
+  //     copy[index] = true;
+  //     return copy;
+  //   });
+  // };
+
+  
   const updateProduct = (
     index: number,
     field: keyof Product,
@@ -147,12 +135,30 @@ export default function GroupCreateForm() {
       setUploadingIndex(null);
     }
   };
+  // if (!groupname || !deadline || !pickupOptions?.length || !ownerId || !products?.length) {
+  //       return NextResponse.json({ message: '欄位不可為空' }, { status: 400 });
+  //     }
 
   const handleSubmit = async () => {
-    if (!groupname || !deadline || products.length === 0 || pickupOptions.length === 0) {
-      toast.error('請完整填寫所有欄位');
+    if ( !groupname){toast.error('請填寫團名');return;}
+    if ( !deadline){toast.error('請填寫結單日期');return;}
+    // 過濾掉空的取貨選項
+    const validPickupOptions = pickupOptions.filter(option => option.time && option.location);
+  
+    if (validPickupOptions.length === 0) {
+      toast.error('請至少添加一個有效的取貨時段與地點');
       return;
     }
+    
+    // 過濾掉空的商品
+    const validProducts = products.filter(p => p.name );
+  
+    if (validProducts.length === 0) {
+      toast.error('請至少添加一個有效商品');
+      return;
+    }
+    
+
     setSubmitting(true);
     try {
       const user = await getCurrentUser();
@@ -172,9 +178,9 @@ export default function GroupCreateForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           groupname,
-          deadline,
-          pickupOptions,
-          products,
+          deadline,          
+          pickupOptions: validPickupOptions,
+          products: validProducts,
           ownerId: user.userId
         })
       });
@@ -183,7 +189,9 @@ export default function GroupCreateForm() {
       if (!res.ok) throw new Error(result.message || '建立失敗');
 
       toast.success('開團成功');
-      router.push(`/group/${result.groupId}`);
+      // router.push(`/group/${result.groupId}`);
+      router.push("/dashboard")
+      
     } catch (err: any) {
       toast.error(err.message || '開團失敗');
     } finally {
@@ -341,7 +349,12 @@ export default function GroupCreateForm() {
                           <Button
                             type="button"
                             variant="destructive"
-                            onClick={() => updateProduct(index, "imageUrl", "")}
+                            onClick={() => {
+                              if (window.confirm("確定要刪除此圖片嗎？")) {
+                                updateProduct(index, "imageUrl", "");
+                              }
+                            }}
+                            
                           >
                             刪除
                           </Button>
@@ -369,9 +382,16 @@ export default function GroupCreateForm() {
         type="button"
         onClick={handleSubmit}
         disabled={submitting}
-        className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+        className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded mt-10"
       >
         {submitting ? '建立中...' : '建立團單'}
+      </button>
+      <button
+        type="button"
+        onClick={() => router.push("/dashboard")}
+        className="bg-gray-300 hover:bg-gray-400 text-black px-4 py-2 rounded ml-10"
+      >
+        放棄編輯
       </button>
     </div>
   );

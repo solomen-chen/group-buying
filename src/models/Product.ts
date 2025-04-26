@@ -18,9 +18,9 @@ const ProductSchema: Schema = new Schema<IProduct>(
   {
     groupOrderId: { type: Schema.Types.ObjectId, ref: 'GroupOrder', required: true },
     name: { type: String, required: true },
-    imageUrl: { type: String, required: true },
-    spec: { type: String, required: true },
-    price: { type: Number, required: true },
+    imageUrl: { type: String },
+    spec: { type: String },
+    price: { type: Number},
     supply: { type: Number, default: 0 },
   },
   { timestamps: true }

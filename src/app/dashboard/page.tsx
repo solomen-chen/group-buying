@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { LogoutButton } from "@/components/logout-button";
 import GroupOrder from "@/models/GroupOrder";
 import mongoose from "mongoose";
+import { GroupDeleteButton } from "@/components/group-delete-button";
 
 interface GroupOrderRecord {
   _id: mongoose.Types.ObjectId;
@@ -93,9 +94,8 @@ export default async function DashboardPage() {
                     </Button>
                   </td>
                   <td className="border px-3 py-2 text-center">
-                    <Button variant="destructive" size="sm">
-                      刪除
-                    </Button>
+                      {/* [刪除鈕] */}
+                      <GroupDeleteButton groupId={group._id} /> 
                   </td>
                 </tr>
               ))}
