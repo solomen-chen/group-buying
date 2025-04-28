@@ -86,6 +86,17 @@ export default function GroupCreateForm() {
     updated[index][field] = value;
     setProducts(updated);
   };
+
+  const removeProduct = (index: number) => {
+    const updated = [...products];
+    updated.splice(index, 1);
+    setProducts(updated);
+  };
+  
+
+
+
+
   const handleImageChange = async (
     e: React.ChangeEvent<HTMLInputElement>,
     index: number
@@ -227,7 +238,7 @@ export default function GroupCreateForm() {
               <button
                 type="button"
                 onClick={() => removePickupOption(idx)}
-                className="text-red-600"
+                className="text-red-600 bg-red-100 hover:bg-red-200 font-semibold border-2 border-red-600 rounded px-4 py-2"
               >
                 刪除
               </button>
@@ -301,6 +312,7 @@ export default function GroupCreateForm() {
                           type="file"
                           accept="image/*"
                           onChange={(e) => handleImageChange(e, index)}
+                          className = "mt-2"
                         />
                         {uploadingIndex === index && (
                           <div className="flex items-center space-x-2 text-sm text-blue-600 mt-2">
@@ -353,6 +365,15 @@ export default function GroupCreateForm() {
                       </div>
                     )}
                 </div>
+                {products.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => removeProduct(index)}
+                  className="text-red-600 bg-red-100 hover:bg-red-200 font-semibold border-2 border-red-600 rounded px-4 py-2"
+                >
+                  刪除此商品
+                </button>
+            )}
               </div>
             ))}
       
