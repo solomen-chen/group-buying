@@ -89,9 +89,11 @@ export default async function DashboardPage() {
                   </td>
                   <td className="border px-3 py-2 text-center">(待完成)</td>
                   <td className="border px-3 py-2 text-center">
-                    <Button variant="outline" size="sm">
-                      修改
-                    </Button>
+                      <Link href={`/group/edit/${group._id}`}>
+                          <Button variant="outline" size="sm">
+                              修改
+                          </Button>
+                      </Link>
                   </td>
                   <td className="border px-3 py-2 text-center">
                       {/* [刪除鈕] */}

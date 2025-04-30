@@ -20,11 +20,11 @@ interface PickupOption {
 
 
 type Product = {
-  name: string;   //商品名稱
-  spec: string;   //規格說明
-  price: string;  //價格
-  supply: string; //供應數量，0表示無限
-  imageUrl: string; //商品圖片上傳到cloudinary後的網址
+  name: string;
+  spec: string;
+  price: string;
+  supply: string;
+  imageUrl: string;
 };
 
 export default function GroupCreateForm() {
@@ -32,6 +32,7 @@ export default function GroupCreateForm() {
   const [groupname, setgroupname] = useState('');
   const [deadline, setDeadline] = useState('');
   const [pickupOptions, setPickupOptions] = useState<PickupOption[]>([{ time: '', location: '' }]);
+  // const [products, setProducts] = useState<Product[]>([]);
   const [products, setProducts] = useState<Product[]>([{
     name: "",
     spec: "",
@@ -128,7 +129,9 @@ export default function GroupCreateForm() {
       setUploadingIndex(null);
     }
   };
-  
+  // if (!groupname || !deadline || !pickupOptions?.length || !ownerId || !products?.length) {
+  //       return NextResponse.json({ message: '欄位不可為空' }, { status: 400 });
+  //     }
 
   const handleSubmit = async () => {
     if ( !groupname){toast.error('請填寫團名');return;}
@@ -168,11 +171,11 @@ export default function GroupCreateForm() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          groupname, // 團名
-          deadline,    //結單日期      
-          pickupOptions: validPickupOptions, //取貨時間與地點
-          products: validProducts,  //商品資料
-          ownerId: user.userId  //團主的代號
+          groupname,
+          deadline,          
+          pickupOptions: validPickupOptions,
+          products: validProducts,
+          ownerId: user.userId
         })
       });
 

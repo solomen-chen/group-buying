@@ -1,20 +1,11 @@
 // src/app/group/create/page.tsx
-import { redirect } from 'next/navigation';
-import { getServerUser } from '@/lib/auth/server';
-import GroupCreateForm from './GroupCreateForm';
+import { GroupForm } from "@/components/group-form";
 
-export default async function GroupCreatePage() {
-  const user = await getServerUser();
-  if (!user) {
-    redirect('/login');
-  }
-
+export default function CreateGroupPage() {
   return (
-    <main className="max-w-3xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6">開團作業   ( {user.name} )</h1>
-      
-      {/* <GroupCreateForm ownerId={user.userId} /> */}
-      <GroupCreateForm />
-    </main>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">建立新團單</h1>
+      <GroupForm mode="create" />
+    </div>
   );
 }
