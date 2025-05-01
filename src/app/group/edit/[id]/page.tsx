@@ -19,6 +19,10 @@ type Product = {
   imageUrl: string;
 };
 
+interface EditPageProps {
+  params: { id: string };
+}
+
 // interface GroupFormProps {
 //   mode: "edit" | "create";
 //   groupId: string;
@@ -30,13 +34,16 @@ type Product = {
 //   };
 // }
 
-export default async function EditGroupPage({ params }: { params: { id: string } }) {
+export default async function EditGroupPage(context: { params: { id: string } }) {
+  const { params } = context;
+
+  const id =  params.id;
   const user = await getServerUser();
   if (!user) notFound();
 
   await mongoose.connect(process.env.MONGODB_URI!);
 
-  const group = await GroupOrder.findOne({ _id: params.id, ownerId: user.userId }).lean() as {
+  const group = await GroupOrder.findOne({ _id: id, ownerId: user.userId }).lean() as {
     groupname?: string;
     deadline?: string;
     pickupOptions?: PickupOption[];
