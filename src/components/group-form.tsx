@@ -1,27 +1,17 @@
-// src/components/group-form.tsx
+//src/conponents//group-form.tsx
+
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { useForm, useFieldArray } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { useEffect } from "react";
+import ImageUpload from "@/components/image-upload";
 
-interface GroupFormProps {
-  mode: "create" | "edit";
-  initialData?: {
-    groupname: string;
-    deadline: string; // ISO 格式
-    pickupOptions?: { time: string; location: string }[]; // 編輯時需要
-    status?: string; // 編輯時需要
-    ownerId?: string; // 編輯時需要
-  };
-  groupId?: string; // 編輯時需要
-}
-
-interface PickupOption {
+type PickupOption = {
   time: string;
   location: string;
-}
-
+};
 
 type Product = {
   name: string;
@@ -31,73 +21,173 @@ type Product = {
   imageUrl: string;
 };
 
-export function GroupForm({ mode, initialData, groupId }: GroupFormProps) {
-  const router = useRouter();
+const formSchema = z.object({
+  groupname: z.string().min(1, "請填寫團名"),
+  deadline: z.string().min(1, "請選擇結單日期"),
+  pickupOptions: z
+    .array(z.object({ time: z.string(), location: z.string() }))
+    .min(1, "至少一個取貨選項"),
+  products: z
+    .array(
+      z.object({
+        name: z.string(),
+        spec: z.string(),
+        price: z.string(),
+        supply: z.string(),
+        imageUrl: z.string(),
+      })
+    )
+    .min(1, "至少一個商品"),
+});
 
-  const [groupname, setgroupname] = useState('');
-    const [deadline, setDeadline] = useState('');
-    const [pickupOptions, setPickupOptions] = useState<PickupOption[]>([{ time: '', location: '' }]);
-    const [products, setProducts] = useState<Product[]>([{
-      name: "",
-      spec: "",
-      price: "",
-      supply: "",
-      imageUrl: "",
-  }]);
+type GroupFormSchema = z.infer<typeof formSchema>;
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+type GroupFormProps = {
+  mode: "create" | "edit";
+  groupId?: string;
+  defaultValues?: GroupFormSchema;
+};
 
-    
-    const payload = { groupname, deadline, pickupOptions, products, ownerId: "" }; // 這裡可以根據需要添加其他欄位
+export function GroupForm({ mode, groupId, defaultValues }: GroupFormProps) {
+  const {
+    register,
+    control,
+    handleSubmit,
+    setValue,
+    watch,
+    reset,
+    formState: { errors },
+  } = useForm<GroupFormSchema>({
+    resolver: zodResolver(formSchema),
+    defaultValues,
+  });
 
+  useEffect(() => {
+    if (defaultValues) reset(defaultValues);
+  }, [defaultValues, reset]);
 
+  const {
+    fields: pickupFields,
+    append: appendPickup,
+    remove: removePickup,
+  } = useFieldArray({ control, name: "pickupOptions" });
 
-    if (mode === "create") {
-      // 建立新團單
-      await fetch("/api/group", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-    } else if (mode === "edit" && groupId) {
-      // 更新舊的團單
-      await fetch(`/api/group/edit/${groupId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-    }
+  const {
+    fields: productFields,
+    append: appendProduct,
+    remove: removeProduct,
+  } = useFieldArray({ control, name: "products" });
 
-    router.push("/dashboard"); // 送出後回到 dashboard
-    router.refresh(); // 強制重新讀取 dashboard 資料
-  }
+  const onSubmit = (data: GroupFormSchema) => {
+    console.log(mode === "edit" ? "更新團單：" : "建立團單：", data);
+    // TODO: 傳送到 API /group/create 或 /group/edit
+  };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      {/* 團名 */}
       <div>
-        <label className="block mb-1">團名</label>
-        <input
-          type="text"
-          value={groupname}
-          onChange={(e) => setgroupname(e.target.value)}
-          className="border p-2 w-full"
-          required
-        />
+        <label className="block font-bold mb-1">團名</label>
+        <input {...register("groupname")} className="border px-2 py-1 w-full" />
+        {errors.groupname && <p className="text-red-500">{errors.groupname.message}</p>}
       </div>
 
+      {/* 結單日期 */}
       <div>
-        <label className="block mb-1">結單日</label>
-        <input
-          type="date"
-          value={deadline.split("T")[0]} // 只取日期部分
-          onChange={(e) => setDeadline(e.target.value)}
-          className="border p-2 w-full"
-          required
-        />
+        <label className="block font-bold mb-1">結單日期</label>
+        <input type="date" {...register("deadline")} className="border px-2 py-1 w-full" />
+        {errors.deadline && <p className="text-red-500">{errors.deadline.message}</p>}
       </div>
 
-      <Button type="submit">{mode === "create" ? "建立團單" : "更新團單"}</Button>
+      {/* 取貨時間與地點 */}
+      <div>
+        <label className="block font-bold mb-2">取貨時間與地點</label>
+        {pickupFields.map((field, index) => (
+          <div key={field.id} className="flex items-center gap-2 mb-2">
+            <input
+              {...register(`pickupOptions.${index}.time`)}
+              placeholder="時間"
+              className="border px-2 py-1 w-1/3"
+            />
+            <input
+              {...register(`pickupOptions.${index}.location`)}
+              placeholder="地點"
+              className="border px-2 py-1 w-1/2"
+            />
+            <button type="button" onClick={() => removePickup(index)} className="text-red-500">
+              移除
+            </button>
+          </div>
+        ))}
+        <button
+          type="button"
+          onClick={() => appendPickup({ time: "", location: "" })}
+          className="text-blue-500 underline"
+        >
+          + 新增取貨選項
+        </button>
+        {errors.pickupOptions && <p className="text-red-500">{errors.pickupOptions.message as string}</p>}
+      </div>
+
+      {/* 商品清單 */}
+      <div>
+        <label className="block font-bold mb-2">商品列表</label>
+        {productFields.map((field, index) => (
+          <div key={field.id} className="border p-4 mb-4 rounded space-y-2">
+            <div className="flex gap-2">
+              <input
+                {...register(`products.${index}.name`)}
+                placeholder="商品名稱"
+                className="border px-2 py-1 w-1/2"
+              />
+              <input
+                {...register(`products.${index}.spec`)}
+                placeholder="規格"
+                className="border px-2 py-1 w-1/2"
+              />
+            </div>
+            <div className="flex gap-2">
+              <input
+                {...register(`products.${index}.price`)}
+                placeholder="價格"
+                className="border px-2 py-1 w-1/2"
+              />
+              <input
+                {...register(`products.${index}.supply`)}
+                placeholder="供應數量 (0=不限)"
+                className="border px-2 py-1 w-1/2"
+              />
+            </div>
+            <div>
+              <ImageUpload
+                initialImage={watch(`products.${index}.imageUrl`)}
+                onImageUploaded={(url) => setValue(`products.${index}.imageUrl`, url)}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => removeProduct(index)}
+              className="text-red-500 mt-2"
+            >
+              移除商品
+            </button>
+          </div>
+        ))}
+        <button
+          type="button"
+          onClick={() =>
+            appendProduct({ name: "", spec: "", price: "", supply: "", imageUrl: "" })
+          }
+          className="text-blue-500 underline"
+        >
+          + 新增商品
+        </button>
+        {errors.products && <p className="text-red-500">{errors.products.message as string}</p>}
+      </div>
+
+      <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded">
+        {mode === "edit" ? "更新" : "建立"} 團單
+      </button>
     </form>
   );
 }
