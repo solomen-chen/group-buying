@@ -37,7 +37,7 @@ export function GroupDeleteButton({ groupId }: Props) {
       size="sm"
       onClick={handleDelete}
       disabled={isPending}
-      className="hover:bg-red-200 hover:cursor-pointer"
+      className="hover:bg-red-800 hover:cursor-pointer "
 
     >
       {isPending ? "刪除中..." : "刪除"}

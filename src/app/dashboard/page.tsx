@@ -90,7 +90,7 @@ export default async function DashboardPage() {
                   <td className="border px-3 py-2 text-center">(待完成)</td>
                   <td className="border px-3 py-2 text-center">
                       <Link href={`/group/edit/${group._id}`}>
-                          <Button variant="outline" size="sm" className="hover:bg-blue-1600 hover:cursor-pointer">
+                          <Button variant="outline" size="sm" className="hover:bg-white-600 hover:cursor-pointer">
                               修改
                           </Button>
                       </Link>
